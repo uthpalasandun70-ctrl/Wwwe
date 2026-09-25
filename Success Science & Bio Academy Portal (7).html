@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="si" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success Science & Bio Academy - Cloud LMS Portal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        button, input, select, label { touch-action: manipulation; pointer-events: auto; }
+        
+        #cellCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            #cellCanvas { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col antialiased relative overflow-x-hidden">
+
+    <canvas id="cellCanvas"></canvas>
+
+    <div class="bg-emerald-900/90 backdrop-blur-md text-emerald-100 text-[11px] py-1.5 px-4 hidden sm:block no-print content-layer">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <span><i class="fa-solid fa-phone mr-1"></i> +94 76 840 4990</span>
+                <span><i class="fa-solid fa-envelope mr-1"></i> uthpalasandun50@gmail.com</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1.5">
+                    <span id="cloudStatusIndicator" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Cloud Sync Active
+                </span>
+                <span>Success Science & Bio Academy</span>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-white/80 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 sticky top-0 z-40 no-print content-layer">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shadow-inner">
+                    <i class="fa-solid fa-microscope animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm tracking-tight text-slate-900 dark:text-white">Success Science & Bio Academy</h1>
+                    <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Cloud LMS & Cell Lab Portal</p>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-1 bg-slate-100/90 dark:bg-slate-950/90 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold backdrop-blur-sm">
+                <button onclick="switchTab('results')" id="nav-results" class="px-4 py-2 rounded-xl transition flex items-center gap-2 bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-table"></i> ප්‍රතිඵල සහ සිසුන්
+                </button>
+                <button onclick="switchTab('portal')" id="nav-portal" class="px-4 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-qrcode"></i> සිසුන්ගේ පරීක්ෂාව
+                </button>
+                <button onclick="switchTab('analytics')" id="nav-analytics" class="px-4 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-chart-pie"></i> විශ්ලේෂණ
+                </button>
+                <button onclick="switchTab('quiz')" id="nav-quiz" class="px-4 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-brain"></i> MCQ Quiz
+                </button>
+                <button onclick="switchTab('data')" id="nav-data" class="px-4 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-database"></i> Cloud දත්ත
+                </button>
+            </nav>
+
+            <div class="flex items-center gap-2">
+                <button onclick="requestOpenChangePassword()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-600 text-xs font-bold transition cursor-pointer" title="Change Admin Password">
+                    <i class="fa-solid fa-key text-emerald-500"></i> මුරපදය මාරු කරන්න
+                </button>
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="md:hidden bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 p-2 flex justify-around text-xs font-semibold no-print z-30 content-layer">
+        <button onclick="switchTab('results')" id="mob-nav-results" class="flex flex-col items-center gap-1 text-emerald-600 dark:text-emerald-400 p-2 cursor-pointer">
+            <i class="fa-solid fa-table text-base"></i> ප්‍රතිඵල
+        </button>
+        <button onclick="switchTab('portal')" id="mob-nav-portal" class="flex flex-col items-center gap-1 text-slate-500 p-2 cursor-pointer">
+            <i class="fa-solid fa-qrcode text-base"></i> පරීක්ෂාව
+        </button>
+        <button onclick="switchTab('analytics')" id="mob-nav-analytics" class="flex flex-col items-center gap-1 text-slate-500 p-2 cursor-pointer">
+            <i class="fa-solid fa-chart-pie text-base"></i> විශ්ලේෂණ
+        </button>
+        <button onclick="switchTab('quiz')" id="mob-nav-quiz" class="flex flex-col items-center gap-1 text-slate-500 p-2 cursor-pointer">
+            <i class="fa-solid fa-brain text-base"></i> Quiz
+        </button>
+        <button onclick="switchTab('data')" id="mob-nav-data" class="flex flex-col items-center gap-1 text-slate-500 p-2 cursor-pointer">
+            <i class="fa-solid fa-database text-base"></i> Cloud
+        </button>
+    </div>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 content-layer">
+
+        <section id="tab-results" class="space-y-6">
+            <div class="bg-gradient-to-br from-emerald-700 via-teal-800 to-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl space-y-4 relative overflow-hidden border border-emerald-400/20">
+                <div class="absolute -left-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-xl text-emerald-300">
+                        <i class="fa-solid fa-magnifying-glass animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg sm:text-xl font-black">සිසු ප්‍රතිඵල ක්ෂණික සෙවුම (Instant Result Lookup)</h3>
+                        <p class="text-emerald-100 text-xs">ඔබගේ ලියාපදිංචි අංකය (Reg No) හෝ නම ඇතුළත් කර ප්‍රතිඵල කාඩ්පත ක්ෂණිකව බලාගන්න.</p>
+                    </div>
+                </div>
+                
+                <div class="pt-2 flex flex-col sm:flex-row gap-3 max-w-xl">
+                    <div class="relative flex-grow">
+                        <i class="fa-solid fa-id-card absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="topPortalSearchInput" oninput="lookupTopStudentPortal()" placeholder="උදා: SSA-1001 හෝ නම..." class="w-full pl-10 pr-4 py-3 bg-slate-950/70 border border-emerald-400/30 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 uppercase font-mono">
+                    </div>
+                    <button onclick="lookupTopStudentPortal()" class="px-6 py-3 bg-white text-emerald-950 hover:bg-emerald-50 rounded-2xl text-xs font-bold transition shadow-lg cursor-pointer flex items-center justify-center gap-2 shrink-0">
+                        <i class="fa-solid fa-search"></i> ප්‍රතිඵල බලන්න
+                    </button>
+                </div>
+
+                <div id="topPortalResultContainer" class="hidden space-y-4 pt-4 border-t border-emerald-600/30">
+                    <div class="bg-white/95 dark:bg-slate-900/95 text-slate-900 dark:text-white backdrop-blur-md rounded-2xl p-5 shadow-xl space-y-4 relative overflow-hidden">
+                        <div class="flex justify-between items-start pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div>
+                                <span id="topPortalCardBatch" class="text-[10px] bg-emerald-500/10 text-emerald-600 font-bold px-3 py-1 rounded-full uppercase">Batch</span>
+                                <h4 id="topPortalCardName" class="text-lg font-black mt-1">සිසුවාගේ නම</h4>
+                                <p id="topPortalCardId" class="text-xs font-mono text-slate-500">SSA-XXXX</p>
+                            </div>
+                            <div id="topPortalQRCode" class="bg-white p-2 rounded-xl shadow-md w-20 h-20 flex items-center justify-center shrink-0 border border-slate-100"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl">
+                                <span class="text-slate-500 block text-[10px] mb-0.5">විභාගය / Unit</span>
+                                <span id="topPortalCardExam" class="font-bold text-slate-800 dark:text-slate-200">Unit 05</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl">
+                                <span class="text-slate-500 block text-[10px] mb-0.5">MCQ (40%) & රචනා (60%)</span>
+                                <span id="topPortalCardScores" class="font-bold text-slate-800 dark:text-slate-200">0% | 0%</span>
+                            </div>
+                            <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between">
+                                <div>
+                                    <span class="text-emerald-700 dark:text-emerald-300 font-bold block text-[10px]">මුළු ලකුණු & ශ්‍රේණිය</span>
+                                    <span id="topPortalCardTotal" class="text-base font-black text-emerald-600 dark:text-emerald-400">0%</span>
+                                </div>
+                                <span id="topPortalCardGrade" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-bold text-sm">A</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="topPortalNotFoundState" class="hidden p-4 bg-rose-500/20 rounded-xl text-xs font-bold text-rose-200">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> මෙම ලියාපදිංචි අංකය හෝ නම සඳහා දත්ත හමු නොවීය.
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-950 rounded-3xl p-6 sm:p-10 text-white shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden border border-emerald-500/20">
+                <div class="absolute -right-12 -top-12 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+                <div class="absolute right-1/4 -bottom-16 w-64 h-64 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="space-y-3 z-10">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/30 backdrop-blur-md text-[11px] font-bold tracking-wide uppercase border border-emerald-400/30">
+                            <i class="fa-solid fa-microscope text-emerald-300"></i> Success Science & Bio Academy
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-500/20 backdrop-blur-md text-[11px] font-bold text-cyan-200">
+                            <i class="fa-solid fa-dna animate-spin text-cyan-300" style="animation-duration: 8s;"></i> Cellular & Genetics Lab
+                        </span>
+                    </div>
+                    <h2 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight">විද්‍යා සහ ජීව විද්‍යා සිසුන්ගේ ප්‍රතිඵල පද්ධතිය</h2>
+                    <p class="text-emerald-100 text-xs sm:text-sm max-w-xl leading-relaxed">අන්වීක්ෂීය සෛලීය විශ්ලේෂණ හා A/L විභාග සූදානම එකම වහලක් යටින් Cloud එකෙන් සජීවීව පාලනය කරන්න.</p>
+                </div>
+
+                <div class="flex flex-wrap gap-3 z-10 no-print">
+                    <button onclick="requestAdminAction('add_new')" class="px-5 py-3.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 rounded-2xl text-xs font-black shadow-lg transition flex items-center gap-2 cursor-pointer transform hover:scale-105">
+                        <i class="fa-solid fa-user-plus text-base"></i> නව සිසුවෙක් එක් කරන්න
+                    </button>
+                    <button onclick="requestOpenChangePassword()" class="px-4 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl text-xs font-semibold backdrop-blur-md transition flex items-center gap-2 cursor-pointer" title="Change Admin Password">
+                        <i class="fa-solid fa-key"></i> Pass
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between no-print">
+                <div class="relative w-full sm:w-96">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="filterStudents()" placeholder="නම හෝ Reg No මගින් සොයන්න..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <select id="batchFilter" onchange="filterStudents()" class="w-full sm:w-auto px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium cursor-pointer">
+                        <option value="ALL">සියලුම පාඨමාලා / Batches</option>
+                        <option value="A/L 2026 Batch">A/L 2026 Batch (PCB)</option>
+                        <option value="A/L 2027 Batch">A/L 2027 Batch (PCB)</option>
+                        <option value="Revision Batch">Revision Batch</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50/80 dark:bg-slate-950/80 text-slate-500 font-bold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4">Reg No</th>
+                                <th class="p-4">සිසුවාගේ නම</th>
+                                <th class="p-4">Batch / Course</th>
+                                <th class="p-4">විභාගය / Unit</th>
+                                <th class="p-4 text-center">MCQ (40%)</th>
+                                <th class="p-4 text-center">රචනා (60%)</th>
+                                <th class="p-4 text-center">මුළු ලකුණු</th>
+                                <th class="p-4 text-center">ශ්‍රේණිය</th>
+                                <th class="p-4 text-right no-print">ක්‍රියාකාරකම්</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="emptyTableState" class="hidden p-12 text-center flex flex-col items-center justify-center space-y-3">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-users-slash"></i>
+                    </div>
+                    <p class="font-bold text-sm text-slate-600 dark:text-slate-400">සිසු වාර්තා කිසිවක් හමු නොවීය.</p>
+                    <p class="text-[11px] text-slate-400">ඉහත "නව සිසුවෙක් එක් කරන්න" බටන් එක ඔබා පළමු වාර්තාව ඇතුළත් කරන්න.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-portal" class="hidden space-y-6">
+            <div class="bg-gradient-to-br from-emerald-700 via-teal-800 to-slate-950 rounded-3xl p-6 sm:p-10 text-white shadow-2xl max-w-2xl mx-auto text-center space-y-4 relative overflow-hidden border border-emerald-400/20">
+                <div class="absolute -left-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto text-2xl text-emerald-300">
+                    <i class="fa-solid fa-microscope animate-bounce"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black">සිසු ප්‍රතිඵල සෙවුම් පෝලිම</h2>
+                <p class="text-emerald-100 text-xs sm:text-sm">ඔබගේ ලියාපදිංචි අංකය (Reg No) ඇතුළත් කර ප්‍රතිඵල කාඩ්පත ක්ෂණිකව බලාගන්න.</p>
+                
+                <div class="pt-4 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <div class="relative flex-grow">
+                        <i class="fa-solid fa-id-card absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="portalSearchInput" oninput="lookupStudentPortal()" placeholder="උදා: SSA-1001" class="w-full pl-10 pr-4 py-3 bg-slate-950/70 border border-emerald-400/30 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 uppercase font-mono">
+                    </div>
+                    <button onclick="lookupStudentPortal()" class="px-6 py-3 bg-white text-emerald-950 hover:bg-emerald-50 rounded-2xl text-xs font-bold transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass"></i> ප්‍රතිඵල බලන්න
+                    </button>
+                </div>
+            </div>
+
+            <div id="portalResultContainer" class="max-w-xl mx-auto hidden space-y-4">
+                <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-start pb-4 border-b border-slate-100 dark:border-slate-800">
+                        <div>
+                            <span id="portalCardBatch" class="text-[10px] bg-emerald-500/10 text-emerald-600 font-bold px-3 py-1 rounded-full uppercase">Batch</span>
+                            <h3 id="portalCardName" class="text-xl font-black mt-2 text-slate-900 dark:text-white">සිසුවාගේ නම</h3>
+                            <p id="portalCardId" class="text-xs font-mono text-slate-500 mt-0.5">SSA-XXXX</p>
+                        </div>
+                        <div id="portalQRCode" class="bg-white p-2 rounded-2xl shadow-md w-24 h-24 flex items-center justify-center shrink-0 border border-slate-100"></div>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="flex justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-xl">
+                            <span class="text-slate-500 font-medium">විභාගය / Unit:</span>
+                            <span id="portalCardExam" class="font-bold text-slate-800 dark:text-slate-200">Unit 05</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl">
+                                <span class="text-slate-500 block text-[10px] mb-1">MCQ ලකුණු (40%)</span>
+                                <span id="portalCardMcq" class="font-bold text-sm text-slate-800 dark:text-slate-100">0%</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl">
+                                <span class="text-slate-500 block text-[10px] mb-1">රචනා ලකුණු (60%)</span>
+                                <span id="portalCardEssay" class="font-bold text-sm text-slate-800 dark:text-slate-100">0%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                            <div>
+                                <span class="text-emerald-700 dark:text-emerald-300 font-bold block">සමස්ත ප්‍රතිඵලය & ශ්‍රේණිය</span>
+                                <span class="text-[10px] text-slate-500">Success Science & Bio Academy</span>
+                            </div>
+                            <div class="text-right">
+                                <span id="portalCardTotal" class="text-xl font-black text-emerald-600 dark:text-emerald-400">0%</span>
+                                <span id="portalCardGrade" class="ml-2 px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-bold text-xs">A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="window.print()" class="flex-1 py-3 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-print"></i> මුද්‍රණය කරන්න (Print)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="portalNotFoundState" class="max-w-xl mx-auto hidden p-8 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 text-center space-y-3">
+                <div class="w-14 h-14 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">මෙම ලියාපදිංචි අංකය සඳහා දත්ත හමු නොවීය.</h4>
+                <p class="text-xs text-slate-400">කරුණාකර ඔබේ Reg No අංකය නිවැරදිදැයි පරීක්ෂා කර නැවත උත්සාහ කරන්න.</p>
+            </div>
+        </section>
+
+        <section id="tab-analytics" class="hidden space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                    <p class="text-xs text-slate-500 font-semibold">සමස්ත සිසුන් සංඛ්‍යාව</p>
+                    <h3 class="text-3xl font-extrabold text-emerald-600" id="statTotalStudents">0</h3>
+                </div>
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                    <p class="text-xs text-slate-500 font-semibold">සාමාන්‍ය මුළු ලකුණු</p>
+                    <h3 class="text-3xl font-extrabold text-teal-600" id="statAvgMarks">0%</h3>
+                </div>
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                    <p class="text-xs text-slate-500 font-semibold">A සාමාර්ථ (Toppers)</p>
+                    <h3 class="text-3xl font-extrabold text-cyan-600" id="statACount">0</h3>
+                </div>
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                    <p class="text-xs text-slate-500 font-semibold">ඉහළම ලකුණු ලබාගත් සිසුවා</p>
+                    <h3 class="text-lg font-bold truncate text-slate-800 dark:text-slate-100" id="statTopStudent">-</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                    <h3 class="font-bold text-sm">ශ්‍රේණි ව්‍යාප්තිය (Grade Distribution)</h3>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="gradeChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                    <h3 class="font-bold text-sm">Batch අනුව සිසුන් සංඛ්‍යාව</h3>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="batchChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-quiz" class="hidden space-y-6">
+            <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm max-w-2xl mx-auto space-y-6">
+                <div class="text-center space-y-2">
+                    <span class="px-3 py-1 bg-emerald-500/10 text-emerald-600 font-bold text-[11px] rounded-full">Success Science Quiz Challenge</span>
+                    <h2 class="text-xl font-bold">Biology Unit 05 - Quick MCQ Quiz</h2>
+                    <p class="text-xs text-slate-500">ඔබේ විද්‍යා සහ ජීව විද්‍යා දැනුම පරීක්ෂා කර බලන්න.</p>
+                </div>
+                
+                <div id="quizBox" class="space-y-4 text-xs">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 font-bold" id="quizQuestion">
+                        ප්‍රශ්නය පූරණය වෙමින් පවතී...
+                    </div>
+                    <div id="quizOptions" class="space-y-2">
+                    </div>
+                    <button onclick="nextQuizQuestion()" id="quizNextBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow transition hidden cursor-pointer">ඊළඟ ප්‍රශ්නය</button>
+                </div>
+                <div id="quizResultBox" class="hidden text-center space-y-4 py-8">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h3 class="text-lg font-bold" id="quizScoreText">ඔබේ ලකුණු: 0/3</h3>
+                    <button onclick="restartQuiz()" class="px-6 py-2.5 bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer">නැවත උත්සාහ කරන්න</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-data" class="hidden space-y-6">
+            <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm max-w-2xl mx-auto space-y-6">
+                <div class="space-y-2">
+                    <h2 class="text-xl font-bold">Cloud දත්ත කළමනාකරණය (Cloud Center)</h2>
+                    <p class="text-xs text-slate-500">මෙම යෙදුම Google Firebase Cloud Firestore සමඟ ආරක්ෂිතව සම්බන්ධ වී ඇත. ඔබේ දත්ත ස්වයංක්‍රීයව ලින්ක් එක හරහා ගබඩා වේ.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
+                    <button onclick="exportJSONBackup()" class="p-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl shadow transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-arrow-down text-base"><span>Backup Download</span></i>
+                    </button>
+                    <label class="p-4 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl shadow transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-arrow-up text-base"><span>JSON Restore</span></i>
+                        <input type="file" accept=".json" onchange="importJSONBackup(event)" class="hidden">
+                    </label>
+                </div>
+                <div class="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-rose-600 dark:text-rose-400 text-xs">සියලුම Cloud දත්ත මකා දමන්න</p>
+                        <p class="text-[10px] text-slate-500">මෙය ක්‍රියාත්මක කළහොත් Cloud එකේ ඇති සියලුම සිසුන්ගේ දත්ත ඉවත් වේ.</p>
+                    </div>
+                    <button onclick="confirmClearAllData()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition cursor-pointer">Clear All</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500 no-print content-layer">
+        <p>Success Science & Bio Academy Portal © 2026 • Cloud Synced & Cell Lab Active</p>
+    </footer>
+
+    <div id="studentModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 dark:border-slate-800">
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-sm flex items-center gap-2" id="modalHeadingTitle">
+                    <i class="fa-solid fa-user-plus text-emerald-500"></i> නව සිසු වාර්තාවක් එක් කරන්න
+                </h3>
+                <button onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-600 p-2 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="studentForm" onsubmit="handleSaveStudent(event)" class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="editDocId" value="">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block font-semibold text-slate-700 dark:text-slate-300">ලියාපදිංචි අංකය</label>
+                            <button type="button" onclick="generateNewRegNo()" class="text-[10px] bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto
+                            </button>
+                        </div>
+                        <input type="text" id="inputRegNo" required placeholder="SSA-1001" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl uppercase font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Batch / Course</label>
+                        <select id="inputBatch" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer">
+                            <option value="A/L 2026 Batch">A/L 2026 Batch (PCB)</option>
+                            <option value="A/L 2027 Batch">A/L 2027 Batch (PCB)</option>
+                            <option value="Revision Batch">Revision Batch</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">සිසුවාගේ සම්පූර්ණ නම</label>
+                    <input type="text" id="inputName" required placeholder="උදා: තාරක පෙරේරා" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">විභාගයේ නම / Unit Title</label>
+                    <input type="text" id="inputExamTitle" required placeholder="උදා: Unit 05 - Genetics" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">MCQ ලකුණු (මඟින් 40%)</label>
+                        <input type="number" id="inputMcq" required min="0" max="100" placeholder="0 - 100" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">රචනා ලකුණු (මඟින් 60%)</label>
+                        <input type="number" id="inputEssay" required min="0" max="100" placeholder="0 - 100" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-100 dark:bg-slate-950 rounded-2xl flex items-center justify-between gap-3 border border-slate-200 dark:border-slate-800">
+                    <div class="space-y-1">
+                        <p class="font-bold text-slate-800 dark:text-slate-200">QR Code Preview</p>
+                        <p class="text-[10px] text-slate-500">මෙම කේතය ස්වයංක්‍රීයව ජනනය වේ.</p>
+                    </div>
+                    <div id="modalQRCode" class="bg-white p-2 rounded-xl shadow-sm w-20 h-20 flex items-center justify-center shrink-0"></div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeStudentModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition cursor-pointer">අවලංගු කරන්න</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow transition cursor-pointer">Save කරන්න</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="resultCardModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-800 p-6 space-y-6">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <h3 class="font-bold text-sm">සිසු ප්‍රතිඵල කාඩ්පත</h3>
+                </div>
+                <button onclick="closeResultCardModal()" class="text-slate-400 hover:text-slate-600 p-2 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div id="printableCardArea" class="bg-slate-50 dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span id="resCardBatch" class="text-[10px] bg-emerald-500/10 text-emerald-600 font-bold px-2 py-0.5 rounded-full">A/L 2026 Batch</span>
+                        <h4 id="resCardName" class="font-bold text-base mt-1 text-slate-900 dark:text-white">උදා: තාරක පෙරේරා</h4>
+                        <p id="resCardId" class="text-xs font-mono text-slate-500">SSA-1001</p>
+                    </div>
+                    <div id="resultQRCode" class="bg-white p-2 rounded-xl shadow-sm w-20 h-20 flex items-center justify-center shrink-0"></div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">විභාගය:</span>
+                        <span id="resCardExam" class="font-bold text-right">Unit 05 - Genetics</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">MCQ ලකුණු (40%):</span>
+                        <span id="resCardMcq" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">රචනා ලකුණු (60%):</span>
+                        <span id="resCardEssay" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-sm font-extrabold text-emerald-600">
+                        <span>මුළු ලකුණු:</span>
+                        <span id="resCardTotal">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 pt-2">
+                <button onclick="window.print()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-print"><span>Print</span></i>
+                </button>
+                <button onclick="downloadStudentQRCode()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-qrcode"><span>Download QR</span></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="passwordModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 text-xs">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-emerald-500"></i> Admin ආරක්ෂිත මුරපදය
+                </h3>
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-slate-600 p-2 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <p class="text-slate-500">මෙම ක්‍රියාව සඳහා Admin මුරපදය ඇතුළත් කරන්න.</p>
+            <input type="password" id="adminPasswordInput" placeholder="මුරපදය ඇතුළත් කරන්න" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closePasswordModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl cursor-pointer">අවලංගු කරන්න</button>
+                <button type="button" onclick="verifyAdminPassword()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl cursor-pointer">තහවුරු කරන්න</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="changePasswordModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 text-xs">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-sm flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <i class="fa-solid fa-key"></i> Admin මුරපදය වෙනස් කිරීම
+                </h3>
+                <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-600 p-2 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">පැරණි මුරපදය (Old Password)</label>
+                    <input type="password" id="oldPasswordInput" placeholder="පැරණි මුරපදය ඇතුළත් කරන්න" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">නව මුරපදය (New Password)</label>
+                    <input type="password" id="newPasswordInput" placeholder="නව මුරපදය ඇතුළත් කරන්න" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">නව මුරපදය තහවුරු කරන්න (Confirm New Password)</label>
+                    <input type="password" id="confirmNewPasswordInput" placeholder="නැවත නව මුරපදය ඇතුළත් කරන්න" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl cursor-pointer">අවලංගු කරන්න</button>
+                <button type="button" onclick="submitChangePassword()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl cursor-pointer">මුරපදය Update කරන්න</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold border border-slate-800 pointer-events-none">
+        <div id="toastIcon" class="text-emerald-400">
+            <i class="fa-solid fa-circle-check text-base"></i>
+        </div>
+        <div id="toastMessage">පණිවිඩය සාර්ථකයි!</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'success-science-bio-academy-portal';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-api-key",
+            authDomain: "demo-project.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        let app, db, auth, userId = null;
+        let studentsData = [];
+        let activeCardStudentId = null;
+        let pendingActionCallback = null;
+        let gradeChartInstance = null;
+        let batchChartInstance = null;
+
+        function getAdminPassword() {
+            return localStorage.getItem('ssa_admin_password') || '20090927';
+        }
+        function setAdminPassword(newPass) {
+            localStorage.setItem('ssa_admin_password', newPass);
+        }
+
+        function initCellBackground() {
+            const canvas = document.getElementById('cellCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const cells = [];
+            const cellCount = Math.floor(window.innerWidth < 768 ? 20 : 40);
+            
+            const colorPalettes = [
+                { cell: 'rgba(16, 185, 129, 0.35)', nucleus: 'rgba(6, 182, 212, 0.5)', line: 'rgba(16, 185, 129, 0.12)' },
+                { cell: 'rgba(239, 68, 68, 0.35)', nucleus: 'rgba(244, 63, 94, 0.5)', line: 'rgba(239, 68, 68, 0.12)' },
+                { cell: 'rgba(59, 130, 246, 0.35)', nucleus: 'rgba(14, 165, 233, 0.5)', line: 'rgba(59, 130, 246, 0.12)' },
+                { cell: 'rgba(245, 158, 11, 0.35)', nucleus: 'rgba(251, 191, 36, 0.5)', line: 'rgba(245, 158, 11, 0.12)' }
+            ];
+
+            for (let i = 0; i < cellCount; i++) {
+                const palette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+                cells.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 28 + 10,
+                    palette: palette,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    pulse: Math.random() * Math.PI,
+                    pulseSpeed: Math.random() * 0.025 + 0.01
+                });
+            }
+
+            function animateCells() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < cells.length; i++) {
+                    for (let j = i + 1; j < cells.length; j++) {
+                        const dx = cells[i].x - cells[j].x;
+                        const dy = cells[i].y - cells[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 160) {
+                            ctx.strokeStyle = cells[i].palette.line;
+                            ctx.lineWidth = 1.2;
+                            ctx.beginPath();
+                            ctx.moveTo(cells[i].x, cells[i].y);
+                            ctx.lineTo(cells[j].x, cells[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                cells.forEach(c => {
+                    c.x += c.vx;
+                    c.y += c.vy;
+
+                    if (c.x < -50) c.x = width + 50;
+                    if (c.x > width + 50) c.x = -50;
+                    if (c.y < -50) c.y = height + 50;
+                    if (c.y > height + 50) c.y = -50;
+
+                    c.pulse += c.pulseSpeed;
+                    const currentRadius = c.radius + Math.sin(c.pulse) * 3.5;
+
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, currentRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = c.palette.cell;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, currentRadius * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = c.palette.nucleus;
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(animateCells);
+            }
+            animateCells();
+        }
+
+        window.onload = async function() {
+            initCellBackground();
+
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                
+                const indicator = document.getElementById('cloudStatusIndicator');
+                if (indicator) {
+                    indicator.classList.remove('bg-amber-400', 'animate-pulse');
+                    indicator.classList.add('bg-emerald-400');
+                }
+
+                initFirestoreListener();
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                showToast("Cloud connection warning. Running offline mode.", "error");
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryReg = urlParams.get('reg');
+            if (queryReg) {
+                switchTab('results');
+                const topInput = document.getElementById('topPortalSearchInput');
+                if (topInput) {
+                    topInput.value = queryReg;
+                    setTimeout(() => lookupTopStudentPortal(), 500);
+                }
+            }
+
+            initQuiz();
+        };
+
+        function initFirestoreListener() {
+            if (!db) return;
+            const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+            
+            onSnapshot(studentsCol, (snapshot) => {
+                studentsData = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    studentsData.push({ ...data, docId: docSnap.id });
+                });
+                renderAllViews();
+            }, (error) => {
+                console.error("Firestore sync error:", error);
+            });
+        }
+
+        function renderAllViews() {
+            filterStudents();
+            updateAnalyticsStats();
+            if (!document.getElementById('tab-analytics').classList.contains('hidden')) {
+                renderCharts();
+            }
+            if (activeCardStudentId) {
+                syncActiveResultCardModal();
+            }
+            const topInput = document.getElementById('topPortalSearchInput');
+            if (topInput && topInput.value.trim() !== '') {
+                lookupTopStudentPortal();
+            }
+            const portalInput = document.getElementById('portalSearchInput');
+            if (portalInput && portalInput.value.trim() !== '') {
+                lookupStudentPortal();
+            }
+        }
+
+        window.showToast = function(message, type = 'success') {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMessage');
+            const iconEl = document.getElementById('toastIcon');
+
+            if (!toast || !msgEl || !iconEl) return;
+
+            msgEl.textContent = message;
+            if (type === 'error') {
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-400 text-base"></i>';
+            } else {
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        window.switchTab = function(tabName) {
+            const tabs = ['results', 'portal', 'analytics', 'quiz', 'data'];
+            tabs.forEach(t => {
+                const sec = document.getElementById(`tab-${t}`);
+                const nav = document.getElementById(`nav-${t}`);
+                const mobNav = document.getElementById(`mob-nav-${t}`);
+                if (sec) sec.classList.add('hidden');
+                if (nav) {
+                    nav.classList.remove('bg-white', 'dark:bg-slate-800', 'text-emerald-600', 'dark:text-emerald-400', 'shadow-sm');
+                    nav.classList.add('text-slate-600', 'dark:text-slate-400');
+                }
+                if (mobNav) {
+                    mobNav.classList.remove('text-emerald-600', 'dark:text-emerald-400');
+                    mobNav.classList.add('text-slate-500');
+                }
+            });
+
+            const activeSec = document.getElementById(`tab-${tabName}`);
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            const activeMobNav = document.getElementById(`mob-nav-${tabName}`);
+
+            if (activeSec) activeSec.classList.remove('hidden');
+            if (activeNav) {
+                activeNav.classList.add('bg-white', 'dark:bg-slate-800', 'text-emerald-600', 'dark:text-emerald-400', 'shadow-sm');
+                activeNav.classList.remove('text-slate-600', 'dark:text-slate-400');
+            }
+            if (activeMobNav) {
+                activeMobNav.classList.add('text-emerald-600', 'dark:text-emerald-400');
+                activeMobNav.classList.remove('text-slate-500');
+            }
+
+            if (tabName === 'analytics') {
+                renderCharts();
+            }
+        }
+
+        window.lookupTopStudentPortal = function() {
+            const inputEl = document.getElementById('topPortalSearchInput');
+            if (!inputEl) return;
+            const inputVal = inputEl.value.toUpperCase().trim();
+            const container = document.getElementById('topPortalResultContainer');
+            const notFound = document.getElementById('topPortalNotFoundState');
+
+            if (!inputVal) {
+                if (container) container.classList.add('hidden');
+                if (notFound) notFound.classList.add('hidden');
+                return;
+            }
+
+            const found = studentsData.find(s => s.id === inputVal || (s.name && s.name.toUpperCase().includes(inputVal)));
+            if (found) {
+                if (notFound) notFound.classList.add('hidden');
+                if (container) container.classList.remove('hidden');
+
+                const { total, grade } = calculateTotalAndGrade(found.mcq, found.essay);
+                document.getElementById('topPortalCardBatch').textContent = found.batch || '';
+                document.getElementById('topPortalCardName').textContent = found.name || '';
+                document.getElementById('topPortalCardId').textContent = found.id || '';
+                document.getElementById('topPortalCardExam').textContent = found.examTitle || '';
+                document.getElementById('topPortalCardScores').textContent = `${found.mcq || 0}% | ${found.essay || 0}%`;
+                document.getElementById('topPortalCardTotal').textContent = total + '%';
+                document.getElementById('topPortalCardGrade').textContent = grade;
+
+                const qrContainer = document.getElementById('topPortalQRCode');
+                if (qrContainer) {
+                    qrContainer.innerHTML = '';
+                    new QRCode(qrContainer, {
+                        text: `Success Science Academy - RegNo: ${found.id} | Name: ${found.name} | Score: ${total}%`,
+                        width: 72,
+                        height: 72,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            } else {
+                if (container) container.classList.add('hidden');
+                if (notFound) notFound.classList.remove('hidden');
+            }
+        };
+
+        window.lookupStudentPortal = function() {
+            const inputEl = document.getElementById('portalSearchInput');
+            if (!inputEl) return;
+            const inputVal = inputEl.value.toUpperCase().trim();
+            const container = document.getElementById('portalResultContainer');
+            const notFound = document.getElementById('portalNotFoundState');
+
+            if (!inputVal) {
+                if (container) container.classList.add('hidden');
+                if (notFound) notFound.classList.add('hidden');
+                return;
+            }
+
+            const found = studentsData.find(s => s.id === inputVal || (s.name && s.name.toUpperCase().includes(inputVal)));
+            if (found) {
+                if (notFound) notFound.classList.add('hidden');
+                if (container) container.classList.remove('hidden');
+
+                const { total, grade } = calculateTotalAndGrade(found.mcq, found.essay);
+                document.getElementById('portalCardBatch').textContent = found.batch || '';
+                document.getElementById('portalCardName').textContent = found.name || '';
+                document.getElementById('portalCardId').textContent = found.id || '';
+                document.getElementById('portalCardExam').textContent = found.examTitle || '';
+                document.getElementById('portalCardMcq').textContent = (found.mcq || 0) + '%';
+                document.getElementById('portalCardEssay').textContent = (found.essay || 0) + '%';
+                document.getElementById('portalCardTotal').textContent = total + '%';
+                document.getElementById('portalCardGrade').textContent = grade;
+
+                const qrContainer = document.getElementById('portalQRCode');
+                if (qrContainer) {
+                    qrContainer.innerHTML = '';
+                    new QRCode(qrContainer, {
+                        text: `Success Science Academy - RegNo: ${found.id} | Name: ${found.name} | Score: ${total}%`,
+                        width: 80,
+                        height: 80,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            } else {
+                if (container) container.classList.add('hidden');
+                if (notFound) notFound.classList.remove('hidden');
+            }
+        };
+
+        window.toggleDarkMode = function() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+            }
+        }
+
+        function calculateTotalAndGrade(mcq, essay) {
+            const total = Number(mcq || 0) + Number(essay || 0);
+            let grade = 'E';
+            if (total >= 75) grade = 'A';
+            else if (total >= 65) grade = 'B';
+            else if (total >= 50) grade = 'C';
+            else if (total >= 35) grade = 'S';
+            return { total, grade };
+        }
+
+        function renderStudentsTable(dataList) {
+            const tbody = document.getElementById('studentsTableBody');
+            const emptyState = document.getElementById('emptyTableState');
+            if (!tbody || !emptyState) return;
+            tbody.innerHTML = '';
+
+            if (dataList.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            dataList.forEach(s => {
+                const { total, grade } = calculateTotalAndGrade(s.mcq, s.essay);
+                let badgeColor = 'bg-rose-500/10 text-rose-500';
+                if (grade === 'A') badgeColor = 'bg-emerald-500/10 text-emerald-500';
+                else if (grade === 'B') badgeColor = 'bg-teal-500/10 text-teal-500';
+                else if (grade === 'C') badgeColor = 'bg-cyan-500/10 text-cyan-500';
+                else if (grade === 'S') badgeColor = 'bg-amber-500/10 text-amber-500';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/70 dark:hover:bg-slate-900/70 transition';
+                tr.innerHTML = `
+                    <td class="p-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">${s.id || ''}</td>
+                    <td class="p-4 font-bold text-slate-900 dark:text-white">${s.name || ''}</td>
+                    <td class="p-4 text-slate-500">${s.batch || ''}</td>
+                    <td class="p-4 text-slate-600 dark:text-slate-300">${s.examTitle || ''}</td>
+                    <td class="p-4 text-center font-bold">${s.mcq || 0}%</td>
+                    <td class="p-4 text-center font-bold">${s.essay || 0}%</td>
+                    <td class="p-4 text-center font-extrabold text-slate-900 dark:text-white">${total}%</td>
+                    <td class="p-4 text-center"><span class="px-2.5 py-1 rounded-full font-extrabold text-[11px] ${badgeColor}">${grade}</span></td>
+                    <td class="p-4 text-right space-x-2 no-print">
+                        <button onclick="openResultCard('${s.id}')" class="p-2 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 rounded-xl transition cursor-pointer" title="View Result Card">
+                            <i class="fa-solid fa-id-card"></i>
+                        </button>
+                        <button onclick="requestAdminAction('edit', '${s.id}')" class="p-2 bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 rounded-xl transition cursor-pointer" title="Edit">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="requestAdminAction('delete', '${s.id}')" class="p-2 bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 rounded-xl transition cursor-pointer" title="Delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.filterStudents = function() {
+            const searchInputEl = document.getElementById('searchInput');
+            const batchFilterEl = document.getElementById('batchFilter');
+            const query = searchInputEl ? searchInputEl.value.toLowerCase() : '';
+            const batch = batchFilterEl ? batchFilterEl.value : 'ALL';
+
+            const filtered = studentsData.filter(s => {
+                const matchQuery = (s.name && s.name.toLowerCase().includes(query)) || (s.id && s.id.toLowerCase().includes(query));
+                const matchBatch = (batch === 'ALL' || s.batch === batch);
+                return matchQuery && matchBatch;
+            });
+            renderStudentsTable(filtered);
+        }
+
+        window.generateNewRegNo = function() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const newId = `SSA-${randomNum}`;
+            const regInput = document.getElementById('inputRegNo');
+            if (regInput) regInput.value = newId;
+            updateModalQRCodeLive();
+        };
+
+        function updateModalQRCodeLive() {
+            const regInput = document.getElementById('inputRegNo');
+            const nameInput = document.getElementById('inputName');
+            const modalQR = document.getElementById('modalQRCode');
+            if (!modalQR) return;
+
+            const id = regInput ? regInput.value || 'SSA-XXXX' : 'SSA-XXXX';
+            const name = nameInput ? nameInput.value || 'Student' : 'Student';
+            
+            modalQR.innerHTML = '';
+            new QRCode(modalQR, {
+                text: `Success Science Academy - RegNo: ${id} | Name: ${name}`,
+                width: 64,
+                height: 64,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        document.addEventListener('input', (e) => {
+            if (e.target && (e.target.id === 'inputRegNo' || e.target.id === 'inputName')) {
+                updateModalQRCodeLive();
+            }
+        });
+
+        window.requestAdminAction = function(actionType, studentId) {
+            pendingActionCallback = () => {
+                if (actionType === 'delete') {
+                    executeDeleteStudent(studentId);
+                } else if (actionType === 'edit') {
+                    executeEditStudent(studentId);
+                } else if (actionType === 'add_new') {
+                    const form = document.getElementById('studentForm');
+                    if (form) form.reset();
+                    const editDocId = document.getElementById('editDocId');
+                    if (editDocId) editDocId.value = '';
+                    const headingTitle = document.getElementById('modalHeadingTitle');
+                    if (headingTitle) headingTitle.innerHTML = `<i class="fa-solid fa-user-plus text-emerald-500"></i> නව සිසු වාර්තාවක් එක් කරන්න`;
+                    
+                    const randomNum = Math.floor(1000 + Math.random() * 9000);
+                    const regInput = document.getElementById('inputRegNo');
+                    if (regInput) regInput.value = `SSA-${randomNum}`;
+                    updateModalQRCodeLive();
+
+                    const studentModal = document.getElementById('studentModal');
+                    if (studentModal) studentModal.classList.remove('hidden');
+                }
+            };
+            const adminPassInput = document.getElementById('adminPasswordInput');
+            if (adminPassInput) adminPassInput.value = '';
+            const passwordModal = document.getElementById('passwordModal');
+            if (passwordModal) passwordModal.classList.remove('hidden');
+        };
+
+        window.verifyAdminPassword = function() {
+            const adminPassInput = document.getElementById('adminPasswordInput');
+            if (!adminPassInput) return;
+            const pass = adminPassInput.value.trim();
+            if (pass === getAdminPassword()) {
+                closePasswordModal();
+                if (pendingActionCallback) pendingActionCallback();
+            } else {
+                showToast('වැරදි මුරපදයක්!', 'error');
+            }
+        };
+
+        window.closePasswordModal = function() {
+            const passwordModal = document.getElementById('passwordModal');
+            if (passwordModal) passwordModal.classList.add('hidden');
+        }
+
+        window.requestOpenChangePassword = function() {
+            const oldPass = document.getElementById('oldPasswordInput');
+            const newPass = document.getElementById('newPasswordInput');
+            const confirmPass = document.getElementById('confirmNewPasswordInput');
+            if (oldPass) oldPass.value = '';
+            if (newPass) newPass.value = '';
+            if (confirmPass) confirmPass.value = '';
+            const changeModal = document.getElementById('changePasswordModal');
+            if (changeModal) changeModal.classList.remove('hidden');
+        };
+
+        window.closeChangePasswordModal = function() {
+            const changeModal = document.getElementById('changePasswordModal');
+            if (changeModal) changeModal.classList.add('hidden');
+        };
+
+        window.submitChangePassword = function() {
+            const oldPass = document.getElementById('oldPasswordInput')?.value.trim();
+            const newPass = document.getElementById('newPasswordInput')?.value.trim();
+            const confirmPass = document.getElementById('confirmNewPasswordInput')?.value.trim();
+
+            if (oldPass !== getAdminPassword()) {
+                showToast('පැරණි මුරපදය වැරදියි!', 'error');
+                return;
+            }
+            if (!newPass || newPass.length < 4) {
+                showToast('නව මුරපදය අක්ෂර 4 කට වඩා වැඩි විය යුතුය!', 'error');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                showToast('නව මුරපද දෙක එකිනෙකට නොගැලපේ!', 'error');
+                return;
+            }
+
+            setAdminPassword(newPass);
+            closeChangePasswordModal();
+            showToast('Admin මුරපදය සාර්ථකව Update කරන ලදී!', 'success');
+        };
+
+        window.closeStudentModal = function() {
+            const studentModal = document.getElementById('studentModal');
+            if (studentModal) studentModal.classList.add('hidden');
+        };
+
+        window.executeEditStudent = function(studentId) {
+            const s = studentsData.find(item => item.id === studentId);
+            if (!s) return;
+
+            const editDocId = document.getElementById('editDocId');
+            const inputRegNo = document.getElementById('inputRegNo');
+            const inputBatch = document.getElementById('inputBatch');
+            const inputName = document.getElementById('inputName');
+            const inputExamTitle = document.getElementById('inputExamTitle');
+            const inputMcq = document.getElementById('inputMcq');
+            const inputEssay = document.getElementById('inputEssay');
+            const modalHeadingTitle = document.getElementById('modalHeadingTitle');
+            const studentModal = document.getElementById('studentModal');
+
+            if (editDocId) editDocId.value = s.docId || s.id;
+            if (inputRegNo) inputRegNo.value = s.id;
+            if (inputBatch) inputBatch.value = s.batch;
+            if (inputName) inputName.value = s.name;
+            if (inputExamTitle) inputExamTitle.value = s.examTitle;
+            if (inputMcq) inputMcq.value = s.mcq;
+            if (inputEssay) inputEssay.value = s.essay;
+
+            updateModalQRCodeLive();
+
+            if (modalHeadingTitle) modalHeadingTitle.innerHTML = `<i class="fa-solid fa-pen text-teal-500"></i> සිසු වාර්තාව සංස්කරණය කරන්න`;
+            if (studentModal) studentModal.classList.remove('hidden');
+        };
+
+        window.executeDeleteStudent = async function(studentId) {
+            const s = studentsData.find(item => item.id === studentId);
+            if (!s || !db) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', s.docId || studentId);
+                await deleteDoc(docRef);
+                if (activeCardStudentId === studentId) {
+                    activeCardStudentId = null;
+                    closeResultCardModal();
+                }
+                showToast('සිසු වාර්තාව Cloud එකෙන් මකාදමන ලදී!', 'success');
+            } catch (e) {
+                console.error("Delete error:", e);
+                showToast('දෝෂයක් ඇති විය!', 'error');
+            }
+        };
+
+        window.handleSaveStudent = async function(event) {
+            event.preventDefault();
+            if (!db) {
+                showToast('Cloud database not initialized!', 'error');
+                return;
+            }
+
+            const editDocId = document.getElementById('editDocId')?.value;
+            const regNo = document.getElementById('inputRegNo')?.value.toUpperCase().trim();
+            const batch = document.getElementById('inputBatch')?.value;
+            const name = document.getElementById('inputName')?.value.trim();
+            const examTitle = document.getElementById('inputExamTitle')?.value.trim();
+            const mcq = Number(document.getElementById('inputMcq')?.value || 0);
+            const essay = Number(document.getElementById('inputEssay')?.value || 0);
+
+            if (!regNo || !name) {
+                showToast('කරුණාකර සියලුම අවශ්‍ය තොරතුරු පුරවන්න!', 'error');
+                return;
+            }
+
+            const studentObj = { 
+                id: regNo, 
+                name: name, 
+                batch: batch, 
+                examTitle: examTitle || 'Unit Assessment', 
+                mcq: mcq, 
+                essay: essay,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                const docIdToUse = (editDocId && editDocId.trim() !== '') ? editDocId : regNo;
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', docIdToUse);
+                await setDoc(docRef, studentObj, { merge: true });
+
+                closeStudentModal();
+                showToast('සිසු වාර්තාව Cloud එකේ සාර්ථකව සුරකින ලදී!', 'success');
+            } catch (e) {
+                console.error("Save error:", e);
+                showToast('Cloud එකේ සුරැකීමේදී දෝෂයක් ඇති විය: ' + e.message, 'error');
+            }
+        };
+
+        window.openResultCard = function(studentId) {
+            activeCardStudentId = studentId;
+            syncActiveResultCardModal();
+            const resModal = document.getElementById('resultCardModal');
+            if (resModal) resModal.classList.remove('hidden');
+        };
+
+        function syncActiveResultCardModal() {
+            if (!activeCardStudentId) return;
+            const s = studentsData.find(item => item.id === activeCardStudentId);
+            if (!s) {
+                closeResultCardModal();
+                return;
+            }
+
+            const { total, grade } = calculateTotalAndGrade(s.mcq, s.essay);
+
+            const resCardBatch = document.getElementById('resCardBatch');
+            const resCardName = document.getElementById('resCardName');
+            const resCardId = document.getElementById('resCardId');
+            const resCardExam = document.getElementById('resCardExam');
+            const resCardMcq = document.getElementById('resCardMcq');
+            const resCardEssay = document.getElementById('resCardEssay');
+            const resCardTotal = document.getElementById('resCardTotal');
+
+            if (resCardBatch) resCardBatch.textContent = s.batch || '';
+            if (resCardName) resCardName.textContent = s.name || '';
+            if (resCardId) resCardId.textContent = s.id || '';
+            if (resCardExam) resCardExam.textContent = s.examTitle || '';
+            if (resCardMcq) resCardMcq.textContent = (s.mcq || 0) + '%';
+            if (resCardEssay) resCardEssay.textContent = (s.essay || 0) + '%';
+            if (resCardTotal) resCardTotal.textContent = total + '% (' + grade + ')';
+
+            const qrContainer = document.getElementById('resultQRCode');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: `Success Science Academy - RegNo: ${s.id} | Name: ${s.name} | Score: ${total}%`,
+                    width: 72,
+                    height: 72,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }
+
+        window.closeResultCardModal = function() {
+            activeCardStudentId = null;
+            const resModal = document.getElementById('resultCardModal');
+            if (resModal) resModal.classList.add('hidden');
+        };
+
+        window.downloadStudentQRCode = function() {
+            const qrCanvasElement = document.querySelector('#resultQRCode canvas');
+            if (!qrCanvasElement) {
+                showToast('QR Code එක හමු නොවීය!', 'error');
+                return;
+            }
+            const studentId = document.getElementById('resCardId')?.textContent || 'SSA';
+            const studentName = document.getElementById('resCardName')?.textContent || 'Student';
+            const imageUrl = qrCanvasElement.toDataURL("image/png");
+            const a = document.createElement('a');
+            a.href = imageUrl;
+            a.download = `QR_${studentId}_${studentName.replace(/\s+/g, '_')}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('QR Code Image Download විය!', 'success');
+        };
+
+        function updateAnalyticsStats() {
+            const statTotalStudentsEl = document.getElementById('statTotalStudents');
+            const statAvgMarksEl = document.getElementById('statAvgMarks');
+            const statACountEl = document.getElementById('statACount');
+            const statTopStudentEl = document.getElementById('statTopStudent');
+
+            if (statTotalStudentsEl) statTotalStudentsEl.textContent = studentsData.length;
+            if (studentsData.length === 0) {
+                if (statAvgMarksEl) statAvgMarksEl.textContent = '0%';
+                if (statACountEl) statACountEl.textContent = '0';
+                if (statTopStudentEl) statTopStudentEl.textContent = '-';
+                return;
+            }
+
+            let sumTotal = 0;
+            let aCount = 0;
+            let maxTotal = -1;
+            let topStudentName = '-';
+
+            studentsData.forEach(s => {
+                const { total, grade } = calculateTotalAndGrade(s.mcq, s.essay);
+                sumTotal += total;
+                if (grade === 'A') aCount++;
+                if (total > maxTotal) {
+                    maxTotal = total;
+                    topStudentName = `${s.name || ''} (${total}%)`;
+                }
+            });
+
+            if (statAvgMarksEl) statAvgMarksEl.textContent = Math.round(sumTotal / studentsData.length) + '%';
+            if (statACountEl) statACountEl.textContent = aCount;
+            if (statTopStudentEl) statTopStudentEl.textContent = topStudentName;
+        }
+
+        function renderCharts() {
+            updateAnalyticsStats();
+            let gradesCount = { A: 0, B: 0, C: 0, S: 0, E: 0 };
+            let batchCount = {};
+
+            studentsData.forEach(s => {
+                const { grade } = calculateTotalAndGrade(s.mcq, s.essay);
+                gradesCount[grade]++;
+                const batchKey = s.batch || 'Other';
+                batchCount[batchKey] = (batchCount[batchKey] || 0) + 1;
+            });
+
+            const gradeCanvasEl = document.getElementById('gradeChart');
+            if (gradeCanvasEl) {
+                const gradeCtx = gradeCanvasEl.getContext('2d');
+                if (gradeChartInstance) gradeChartInstance.destroy();
+                gradeChartInstance = new Chart(gradeCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['A Grades', 'B Grades', 'C Grades', 'S Grades', 'E Grades'],
+                        datasets: [{
+                            data: [gradesCount.A, gradesCount.B, gradesCount.C, gradesCount.S, gradesCount.E],
+                            backgroundColor: ['#10b981', '#14b8a6', '#06b6d4', '#f59e0b', '#f43f5e']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            const batchCanvasEl = document.getElementById('batchChart');
+            if (batchCanvasEl) {
+                const batchCtx = batchCanvasEl.getContext('2d');
+                if (batchChartInstance) batchChartInstance.destroy();
+                batchChartInstance = new Chart(batchCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(batchCount),
+                        datasets: [{
+                            label: 'සිසුන් සංඛ්‍යාව',
+                            data: Object.values(batchCount),
+                            backgroundColor: '#10b981',
+                            borderRadius: 8
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        }
+
+        const quizQuestions = [
+            { question: "ප්‍රභාසංස්ලේෂණයේදී ඔක්සිජන් නිදහස් වන්නේ කුමන ක්‍රියාවලියෙන්ද?", options: ["කැල්වින් චක්‍රය", "ජල ප්‍රභේදනය (Photolysis)", "ග්‍රානා තුළ සිදුවන ප්‍රතික්‍රියා", "කාබන් ඩයොක්සයිඩ් තාරාවීම"], correct: 1 },
+            { question: "DNA අණුවක නියුක්ලියෝටයිඩ අතර ඇතිවන බැඳීම කුමක්ද?", options: ["හයිඩ්‍රජන් බැඳීම", "පොස්පොඩයස්ටර් බැඳීම", "පෙප්ටයිඩ් බැඳීම", "ග්ලයිකොසයිඩ් බැඳීම"], correct: 1 },
+            { question: "මානව රුධිරයේ ඔක්සිජන් ප්‍රවාහනය කරන ප්‍රෝටීනය කුමක්ද?", options: ["ඉන්සියුලින්", "හිමොග්ලොබින්", "ඇල්බුමින්", "කෙරටින්"], correct: 1 }
+        ];
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+
+        function initQuiz() {
+            currentQuizIndex = 0;
+            quizScore = 0;
+            const quizBox = document.getElementById('quizBox');
+            const quizResultBox = document.getElementById('quizResultBox');
+            if (quizBox) quizBox.classList.remove('hidden');
+            if (quizResultBox) quizResultBox.classList.add('hidden');
+            loadQuizQuestion();
+        }
+
+        function loadQuizQuestion() {
+            const q = quizQuestions[currentQuizIndex];
+            const qEl = document.getElementById('quizQuestion');
+            if (qEl) qEl.textContent = `ප්‍රශ්නය ${currentQuizIndex + 1}: ${q.question}`;
+            const optBox = document.getElementById('quizOptions');
+            if (!optBox) return;
+            optBox.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 font-medium transition cursor-pointer';
+                btn.textContent = `${idx + 1}. ${opt}`;
+                btn.onclick = () => selectQuizOption(idx, q.correct);
+                optBox.appendChild(btn);
+            });
+            const nextBtn = document.getElementById('quizNextBtn');
+            if (nextBtn) nextBtn.classList.add('hidden');
+        }
+
+        function selectQuizOption(selectedIdx, correctIdx) {
+            const optBox = document.getElementById('quizOptions');
+            if (!optBox) return;
+            const btns = optBox.children;
+            for (let i = 0; i < btns.length; i++) {
+                if (i === correctIdx) {
+                    btns[i].classList.add('bg-emerald-500/20', 'border-emerald-500', 'font-bold');
+                } else if (i === selectedIdx) {
+                    btns[i].classList.add('bg-rose-500/20', 'border-rose-500');
+                }
+                btns[i].disabled = true;
+            }
+            if (selectedIdx === correctIdx) quizScore++;
+            const nextBtn = document.getElementById('quizNextBtn');
+            if (nextBtn) nextBtn.classList.remove('hidden');
+        }
+
+        window.nextQuizQuestion = function() {
+            currentQuizIndex++;
+            if (currentQuizIndex < quizQuestions.length) {
+                loadQuizQuestion();
+            } else {
+                const quizBox = document.getElementById('quizBox');
+                const quizResultBox = document.getElementById('quizResultBox');
+                const quizScoreText = document.getElementById('quizScoreText');
+                if (quizBox) quizBox.classList.add('hidden');
+                if (quizResultBox) quizResultBox.classList.remove('hidden');
+                if (quizScoreText) quizScoreText.textContent = `ඔබේ ලකුණු: ${quizScore} / ${quizQuestions.length}`;
+            }
+        }
+
+        window.restartQuiz = function() {
+            initQuiz();
+        }
+
+        window.exportJSONBackup = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ students: studentsData }, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `Success_Science_Academy_Cloud_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('Cloud JSON Backup සාර්ථකව බාගත විය!', 'success');
+        };
+
+        window.importJSONBackup = function(event) {
+            const fileReader = new FileReader();
+            if (event.target.files[0]) {
+                fileReader.readAsText(event.target.files[0], "UTF-8");
+                fileReader.onload = async function(e) {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        const list = Array.isArray(parsed) ? parsed : (parsed.students || []);
+                        if (list.length > 0 && db) {
+                            for (const s of list) {
+                                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', s.id || crypto.randomUUID());
+                                await setDoc(docRef, { id: s.id, name: s.name, batch: s.batch, examTitle: s.examTitle, mcq: s.mcq, essay: s.essay }, { merge: true });
+                            }
+                            showToast('දත්ත Cloud එකට සාර්ථකව Restore විය!', 'success');
+                        } else {
+                            showToast('අවලංගු JSON ගොනුවකි!', 'error');
+                        }
+                    } catch (err) {
+                        showToast('JSON Parse කිරීමේදී දෝෂයක් ඇති විය!', 'error');
+                    }
+                };
+            }
+        };
+
+        window.confirmClearAllData = function() {
+            pendingActionCallback = async () => {
+                if (!db) return;
+                try {
+                    for (const s of studentsData) {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', s.docId || s.id);
+                        await deleteDoc(docRef);
+                    }
+                    closeResultCardModal();
+                    showToast('Cloud හි සියලුම දත්ත ඉවත් කරන ලදී!', 'success');
+                } catch (e) {
+                    console.error("Clear all error:", e);
+                    showToast('දෝෂයක් ඇති විය!', 'error');
+                }
+            };
+            const adminPassInput = document.getElementById('adminPasswordInput');
+            if (adminPassInput) adminPassInput.value = ``;
+            const passwordModal = document.getElementById('passwordModal');
+            if (passwordModal) passwordModal.classList.remove('hidden');
+        };
+    </script>
+</body>
+</html>
